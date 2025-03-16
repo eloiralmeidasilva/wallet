@@ -25,6 +25,7 @@ public class TransferService implements TransferOperationService {
         this.walletRepository = walletRepository;
         this.transferValidator = transferValidator;
     }
+
     @Transactional
     @CircuitBreaker(name = "walletService", fallbackMethod = "fallbackTransfer")
     @Retry(name = "walletService", fallbackMethod = "retryFallback")
@@ -43,6 +44,7 @@ public class TransferService implements TransferOperationService {
                     .orElseThrow(() -> new EntityNotFoundException("Receiver wallet not found"));
 
             if (senderWallet.getBalance().compareTo(amount) < 0) {
+                log.error("Insufficient balance in sender wallet.");
                 throw new IllegalArgumentException("Insufficient balance in sender wallet.");
             }
 
@@ -57,6 +59,8 @@ public class TransferService implements TransferOperationService {
         } catch (EntityNotFoundException ex) {
             log.error("Entity not found: {}", ex.getMessage());
             throw new EntityNotFoundException(ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            throw ex;
         } catch (Exception ex) {
             log.error("Transfer operation failed for senderUserId: {} with amount: {}. Error: {}", senderUserId, amount, ex.getMessage());
             throw new WalletLockedException("The wallet is temporarily locked due to another operation. Please try again later.");
@@ -78,4 +82,3 @@ public class TransferService implements TransferOperationService {
         throw new UnsupportedOperationException("Transfer operation should use executeTransfer instead.");
     }
 }
-
