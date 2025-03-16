@@ -4,7 +4,6 @@ import com.eloir.wallet.entity.Wallet;
 import com.eloir.wallet.repository.WalletRepository;
 import com.eloir.wallet.validation.CreateWalletValidator;
 import com.eloir.wallet.validation.input.CreateWalletValidationInput;
-import com.eloir.wallet.validation.input.DepositValidationInput;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -62,4 +61,3 @@ public class WalletService {
 
     // Implementação futura: histórico, depósito, saque e transferência
 }
-

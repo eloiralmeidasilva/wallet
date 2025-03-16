@@ -62,13 +62,13 @@ public class WithdrawService implements OperationService {
         }
     }
 
-    public void fallbackWithdraw(String userId, BigDecimal amount, Throwable t) {
+    public void fallbackWithdraw(Throwable t) {
         log.error("Fallback method invoked due to error: {}", t.getMessage());
-        throw new RuntimeException("Withdraw service is temporarily unavailable. Please try again later.");
+        throw new WalletLockedException("Withdraw service is temporarily unavailable. Please try again later.");
     }
 
-    public void retryFallback(String userId, BigDecimal amount, Throwable t) {
+    public void retryFallback(Throwable t) {
         log.error("Retry fallback method invoked due to error: {}", t.getMessage());
-        throw new RuntimeException("The withdraw operation failed after multiple retries. Please try again later.");
+        throw new WalletLockedException("The withdraw operation failed after multiple retries. Please try again later.");
     }
 }

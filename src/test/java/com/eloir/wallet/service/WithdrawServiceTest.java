@@ -110,7 +110,7 @@ class WithdrawServiceTest {
         BigDecimal amount = BigDecimal.valueOf(50);
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            withdrawService.fallbackWithdraw(userId, amount, new Exception("Circuit breaker triggered"));
+            withdrawService.fallbackWithdraw(new Exception("Circuit breaker triggered"));
         });
 
         assertEquals("Withdraw service is temporarily unavailable. Please try again later.", exception.getMessage());
@@ -122,7 +122,7 @@ class WithdrawServiceTest {
         BigDecimal amount = BigDecimal.valueOf(50);
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            withdrawService.retryFallback(userId, amount, new Exception("Retries exhausted"));
+            withdrawService.retryFallback(new Exception("Retries exhausted"));
         });
 
         assertEquals("The withdraw operation failed after multiple retries. Please try again later.", exception.getMessage());
