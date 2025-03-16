@@ -18,7 +18,8 @@ public interface WalletRepository extends JpaRepository<Wallet, Long> {
     @Query(value = "SELECT w FROM Wallet w WHERE w.codAccount = :codAccount", nativeQuery = false)
     Optional<Wallet> findByCodWallet(@Param("codAccount") String codAccount);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT MAX(w.numAccount) FROM Wallet w")
-    Integer findMaxNumAccount();
+    Integer findMaxNumAccountWithLock();
 }
 

@@ -34,15 +34,17 @@ public class WalletService {
         wallet.setUserId(userId);
         wallet.setBalance(BigDecimal.ZERO);
 
-        setRandomCodWallet(wallet);
+        setRandomCodAccount(wallet);
 
         return walletRepository.save(wallet);
     }
 
-    public void setRandomCodWallet(Wallet wallet) {
+    public void setRandomCodAccount(Wallet wallet) {
         String year = String.valueOf(LocalDate.now().getYear());
-        Integer maxNumAccount = walletRepository.findMaxNumAccount();
+
+        Integer maxNumAccount = walletRepository.findMaxNumAccountWithLock();
         int newNumAccount = (maxNumAccount == null) ? 1 : maxNumAccount + 1;
+
         String formattedNumAccount = String.format("%08d", newNumAccount); //regex to get 8 caracters to make a new account
         String accountType = ACCOUNT_TYPE;
 

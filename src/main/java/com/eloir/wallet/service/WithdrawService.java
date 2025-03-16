@@ -54,6 +54,8 @@ public class WithdrawService implements OperationService {
         } catch (EntityNotFoundException ex) {
             log.error("Entity not found: {}", ex.getMessage());
             throw new EntityNotFoundException(ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            throw ex;
         } catch (Exception ex) {
             log.error("Withdraw operation failed for userId: {} with amount: {}. Error: {}", userId, amount, ex.getMessage());
             throw new WalletLockedException("The wallet is temporarily locked due to another operation. Please try again later.");
