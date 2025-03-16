@@ -4,12 +4,14 @@ import com.eloir.wallet.config.security.JwtTokenProvider;
 import com.eloir.wallet.entity.Wallet;
 import com.eloir.wallet.service.WalletService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 
@@ -33,9 +35,9 @@ public class WalletController {
     )
     @PostMapping
     public ResponseEntity<Wallet> createWallet() {
-        String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Wallet wallet = walletService.createWallet(userId);
-        log.info("WalletController - createWallet - wallet created for userId: " + userId);
+        String authenticatedUserId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Wallet wallet = walletService.createWallet(authenticatedUserId);
+        log.info("WalletController - createWallet - wallet created for authenticatedUserId: " + authenticatedUserId);
         return ResponseEntity.ok(wallet);
     }
 
@@ -44,16 +46,11 @@ public class WalletController {
             description = "Retrieves the balance of a user's wallet, ensuring that the user is authenticated.",
             security = @SecurityRequirement(name = "BearerToken")
     )
-    @GetMapping("/{userId}/balance")
-    public ResponseEntity<BigDecimal> getBalance(
-            @Parameter(description = "User ID to retrieve balance") @PathVariable String userId
-    ) {
+    @GetMapping("/balance")
+    public ResponseEntity<BigDecimal> getBalance() {
         String authenticatedUserId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        log.info("WalletController - getBalance - userId: " + userId + " and authenticatedUserId: " + authenticatedUserId);
-        if (!authenticatedUserId.equals(userId)) {
-            return ResponseEntity.status(403).body(BigDecimal.ZERO);
-        }
-        BigDecimal balance = walletService.getBalance(userId);
+        log.info("WalletController - getBalance - authenticatedUserId: " + authenticatedUserId);
+        BigDecimal balance = walletService.getBalance(authenticatedUserId);
         return ResponseEntity.ok(balance);
     }
 }

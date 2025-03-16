@@ -27,8 +27,8 @@ public class DepositService implements OperationService {
     }
 
     @Override
-    @CircuitBreaker(name = "walletService", fallbackMethod = "fallbackDeposit")
-    @Retry(name = "walletService", fallbackMethod = "retryFallback")
+    @CircuitBreaker(name = "depositService", fallbackMethod = "fallbackDeposit")
+    @Retry(name = "depositService", fallbackMethod = "retryFallback")
     @Transactional
     public void execute(String userId, BigDecimal amount) {
 

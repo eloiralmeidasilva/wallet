@@ -1,9 +1,9 @@
 package com.eloir.wallet.controller;
 
-import com.eloir.wallet.model.User;
-import com.eloir.wallet.service.WalletService;
 import com.eloir.wallet.config.security.JwtTokenProvider;
 import com.eloir.wallet.entity.Wallet;
+import com.eloir.wallet.model.User;
+import com.eloir.wallet.service.WalletService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,10 +16,10 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
-import java.util.Optional;
 
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class WalletControllerTest {
@@ -72,18 +72,9 @@ class WalletControllerTest {
         BigDecimal balance = BigDecimal.valueOf(1000);
         when(walletService.getBalance("user123")).thenReturn(balance);
 
-        ResponseEntity<BigDecimal> response = walletController.getBalance("user123");
+        ResponseEntity<BigDecimal> response = walletController.getBalance();
 
         assertEquals(200, response.getStatusCodeValue());
         assertEquals(balance, response.getBody());
-    }
-
-    @Test
-    void getBalance_ShouldReturnForbidden_WhenUserIsNotAuthenticated() {
-        when(authentication.getPrincipal()).thenReturn("wrongUser");
-
-        ResponseEntity<BigDecimal> response = walletController.getBalance("user123");
-
-        assertEquals(403, response.getStatusCodeValue());
     }
 }
