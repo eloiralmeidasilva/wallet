@@ -5,7 +5,7 @@ import lombok.Getter;
 import java.math.BigDecimal;
 
 @Getter
-public class TransferValidationInput extends OperationValidationInput {
+public class TransferValidationInput extends WalletValidationInput {
     private String receiverCodAccount;
 
     public TransferValidationInput(String senderUserId, String receiverCodAccount, BigDecimal amount) {

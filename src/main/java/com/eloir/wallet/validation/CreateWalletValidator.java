@@ -1,11 +1,12 @@
 package com.eloir.wallet.validation;
 
 import com.eloir.wallet.repository.WalletRepository;
+import com.eloir.wallet.validation.input.CreateWalletValidationInput;
 import com.eloir.wallet.validation.input.DepositValidationInput;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CreateWalletValidator implements Validator<DepositValidationInput> {
+public class CreateWalletValidator implements Validator<CreateWalletValidationInput> {
 
     private final WalletRepository walletRepository;
 
@@ -14,7 +15,7 @@ public class CreateWalletValidator implements Validator<DepositValidationInput> 
     }
 
     @Override
-    public void validate(DepositValidationInput input) throws IllegalArgumentException {
+    public void validate(CreateWalletValidationInput input) throws IllegalArgumentException {
         if (input == null) {
             throw new IllegalArgumentException("Invalid input: Deposit information cannot be null.");
         }

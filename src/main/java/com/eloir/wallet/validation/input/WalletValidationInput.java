@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class OperationValidationInput {
+public class WalletValidationInput {
     private String userId;
     private BigDecimal amount;
 

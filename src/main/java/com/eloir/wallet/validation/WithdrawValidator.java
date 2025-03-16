@@ -1,13 +1,15 @@
 package com.eloir.wallet.validation;
 
+import com.eloir.wallet.validation.input.CreateWalletValidationInput;
 import com.eloir.wallet.validation.input.WithdrawValidationInput;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
 @Component
-public class WithdrawValidator {
+public class WithdrawValidator implements Validator<WithdrawValidationInput> {
 
+    @Override
     public void validate(WithdrawValidationInput input) {
         if (input.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Withdrawal amount must be greater than zero.");

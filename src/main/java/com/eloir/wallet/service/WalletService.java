@@ -3,6 +3,7 @@ package com.eloir.wallet.service;
 import com.eloir.wallet.entity.Wallet;
 import com.eloir.wallet.repository.WalletRepository;
 import com.eloir.wallet.validation.CreateWalletValidator;
+import com.eloir.wallet.validation.input.CreateWalletValidationInput;
 import com.eloir.wallet.validation.input.DepositValidationInput;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,7 @@ public class WalletService {
 
     @Transactional
     public Wallet createWallet(String userId) {
-        DepositValidationInput validationInput = new DepositValidationInput(userId, null);
+        CreateWalletValidationInput validationInput = new CreateWalletValidationInput(userId, null);
         validator.validate(validationInput);
         Wallet wallet = new Wallet();
         wallet.setUserId(userId);
