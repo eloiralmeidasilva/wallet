@@ -1,0 +1,89 @@
+package com.eloir.wallet.controller;
+
+import com.eloir.wallet.model.User;
+import com.eloir.wallet.service.WalletService;
+import com.eloir.wallet.config.security.JwtTokenProvider;
+import com.eloir.wallet.entity.Wallet;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.math.BigDecimal;
+import java.util.Optional;
+
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+@ExtendWith(MockitoExtension.class)
+class WalletControllerTest {
+
+    @Mock
+    private WalletService walletService;
+
+    @Mock
+    private JwtTokenProvider jwtTokenProvider;
+
+    @InjectMocks
+    private WalletController walletController;
+
+    @Mock
+    private SecurityContext securityContext;
+
+    @Mock
+    private Authentication authentication;
+
+    private User mockUser;
+
+    @BeforeEach
+    void setUp() {
+        mockUser = new User();
+        mockUser.setUserId("user123");
+        mockUser.setUserName("user");
+        mockUser.setEmail("user.wallet@gmail.com");
+        mockUser.setRole("USER");
+
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getPrincipal()).thenReturn("user123");
+        SecurityContextHolder.setContext(securityContext);
+    }
+
+    @Test
+    void createWallet_ShouldReturnWallet_WhenSuccessful() {
+        Wallet wallet = new Wallet();
+        wallet.setCodAccount("2025.00000001-01");
+        when(walletService.createWallet("user123")).thenReturn(wallet);
+
+        ResponseEntity<Wallet> response = walletController.createWallet();
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertNotNull(response.getBody());
+        assertEquals("2025.00000001-01", response.getBody().getCodAccount());
+    }
+
+    @Test
+    void getBalance_ShouldReturnBalance_WhenUserIsAuthenticated() {
+        BigDecimal balance = BigDecimal.valueOf(1000);
+        when(walletService.getBalance("user123")).thenReturn(balance);
+
+        ResponseEntity<BigDecimal> response = walletController.getBalance("user123");
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(balance, response.getBody());
+    }
+
+    @Test
+    void getBalance_ShouldReturnForbidden_WhenUserIsNotAuthenticated() {
+        when(authentication.getPrincipal()).thenReturn("wrongUser");
+
+        ResponseEntity<BigDecimal> response = walletController.getBalance("user123");
+
+        assertEquals(403, response.getStatusCodeValue());
+    }
+}

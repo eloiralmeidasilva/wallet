@@ -1,9 +1,11 @@
 package com.eloir.wallet.validation;
 
 import com.eloir.wallet.validation.input.WithdrawValidationInput;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
+@Component
 public class WithdrawValidator {
 
     public void validate(WithdrawValidationInput input) {
