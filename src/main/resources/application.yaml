@@ -40,10 +40,21 @@ resilience4j:
         waitDuration: 2000
         retryExceptions:
           - com.eloir.wallet.exception.WalletLockedException
+info:
+  app:
+    name: ${spring.application.name}
+    version: 1.0.0
 
-#management:
-#  endpoint:
-#    health:
-#      group:
-#        default:
-#          include: health,info
+management:
+  endpoint:
+    health:
+      group:
+        custom:
+          include: diskSpace,ping
+
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - info
