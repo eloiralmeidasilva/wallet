@@ -2,6 +2,7 @@ package com.eloir.wallet.service;
 
 import com.eloir.wallet.entity.Wallet;
 import com.eloir.wallet.exception.WalletLockedException;
+import com.eloir.wallet.repository.TransactionRepository;
 import com.eloir.wallet.repository.WalletRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PessimisticLockException;
@@ -21,6 +22,9 @@ class DepositServiceTest {
 
     @Mock
     private WalletRepository walletRepository;
+
+    @Mock
+    private TransactionRepository transactionRepository;
 
     @InjectMocks
     private DepositService depositService;
