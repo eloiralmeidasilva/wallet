@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -31,8 +30,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex, HttpServletRequest request) {
         List<String> errors = ex.getBindingResult().getFieldErrors()
                 .stream()
-                .map(fieldError -> formatValidationMessage(fieldError))
-                .collect(Collectors.toList());
+                .map(this::formatValidationMessage)
+                .toList();
 
         ErrorResponse errorResponse = new ErrorResponse(
                 "400",
