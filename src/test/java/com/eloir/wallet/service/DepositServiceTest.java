@@ -3,9 +3,8 @@ package com.eloir.wallet.service;
 import com.eloir.wallet.entity.Wallet;
 import com.eloir.wallet.exception.WalletLockedException;
 import com.eloir.wallet.repository.WalletRepository;
-import com.eloir.wallet.validation.DepositValidator;
-import com.eloir.wallet.validation.input.DepositValidationInput;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PessimisticLockException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -24,9 +23,6 @@ class DepositServiceTest {
     @Mock
     private WalletRepository walletRepository;
 
-    @Mock
-    private DepositValidator depositValidator;
-
     @InjectMocks
     private DepositService depositService;
 
@@ -39,7 +35,6 @@ class DepositServiceTest {
     void execute_ShouldCallValidator_WhenValidInput() {
         String userId = "user1";
         BigDecimal amount = BigDecimal.TEN;
-        DepositValidationInput validationInput = new DepositValidationInput(userId, amount);
 
         Wallet wallet = new Wallet();
         wallet.setUserId(userId);
@@ -47,16 +42,8 @@ class DepositServiceTest {
 
         when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
 
-        ArgumentCaptor<DepositValidationInput> captor = ArgumentCaptor.forClass(DepositValidationInput.class);
-
         depositService.execute(userId, amount);
 
-        verify(depositValidator).validate(captor.capture());
-
-        DepositValidationInput capturedInput = captor.getValue();
-
-        assertEquals(userId, capturedInput.getUserId());
-        assertEquals(amount, capturedInput.getAmount());
         assertEquals(BigDecimal.TEN, wallet.getBalance());
         verify(walletRepository, times(1)).save(wallet);
     }
@@ -70,10 +57,7 @@ class DepositServiceTest {
         wallet.setUserId(userId);
         wallet.setBalance(BigDecimal.valueOf(50));
 
-        DepositValidationInput validationInput = new DepositValidationInput(userId, amount);
-
         when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
-        doNothing().when(depositValidator).validate(validationInput);
 
         depositService.execute(userId, amount);
 
@@ -86,11 +70,7 @@ class DepositServiceTest {
         String userId = "user1";
         BigDecimal amount = BigDecimal.TEN;
 
-        DepositValidationInput validationInput = new DepositValidationInput(userId, amount);
-
         when(walletRepository.findByUserId(userId)).thenReturn(Optional.empty());
-        doNothing().when(depositValidator).validate(validationInput);
-
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
                 () -> depositService.execute(userId, amount));
 
@@ -103,10 +83,7 @@ class DepositServiceTest {
         String userId = "user1";
         BigDecimal amount = BigDecimal.TEN;
 
-        DepositValidationInput validationInput = new DepositValidationInput(userId, amount);
-
-        when(walletRepository.findByUserId(userId)).thenThrow(new RuntimeException("Unexpected error"));
-        doNothing().when(depositValidator).validate(validationInput);
+        when(walletRepository.findByUserId(userId)).thenThrow(new PessimisticLockException("Unexpected error"));
 
         WalletLockedException exception = assertThrows(WalletLockedException.class,
                 () -> depositService.execute(userId, amount));

@@ -3,11 +3,11 @@ package com.eloir.wallet.service;
 import com.eloir.wallet.entity.Wallet;
 import com.eloir.wallet.exception.WalletLockedException;
 import com.eloir.wallet.repository.WalletRepository;
-import com.eloir.wallet.validation.input.DepositValidationInput;
-import com.eloir.wallet.validation.DepositValidator;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.LockTimeoutException;
+import jakarta.persistence.PessimisticLockException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,22 +19,16 @@ import java.math.BigDecimal;
 public class DepositService implements OperationService {
 
     private final WalletRepository walletRepository;
-    private final DepositValidator depositValidator;
 
-    public DepositService(WalletRepository walletRepository, DepositValidator depositValidator) {
+    public DepositService(WalletRepository walletRepository) {
         this.walletRepository = walletRepository;
-        this.depositValidator = depositValidator;
     }
 
     @Override
-    @CircuitBreaker(name = "depositService", fallbackMethod = "fallbackDeposit")
-    @Retry(name = "depositService", fallbackMethod = "retryFallback")
+    @CircuitBreaker(name = "walletService", fallbackMethod = "fallbackDeposit")
+    @Retry(name = "walletService", fallbackMethod = "retryFallback")
     @Transactional
     public void execute(String userId, BigDecimal amount) {
-
-        DepositValidationInput validationInput = new DepositValidationInput(userId, amount);
-        depositValidator.validate(validationInput);
-
         log.info("Deposit operation started for userId: {} with amount: {}", userId, amount);
 
         try {
@@ -46,12 +40,15 @@ public class DepositService implements OperationService {
             walletRepository.save(wallet);
 
             log.info("Deposit operation successful for userId: {} with amount: {}", userId, amount);
-        } catch (EntityNotFoundException ex){
-            log.error(ex.getMessage());
-            throw new EntityNotFoundException(ex);
-        } catch (Exception e) {
-            log.error("Deposit operation failed for userId: {} with amount: {}. Error: {}", userId, amount, e.getMessage());
+        } catch (EntityNotFoundException ex) {
+            log.error("Wallet not found: {}", ex.getMessage());
+            throw ex;
+        } catch (PessimisticLockException | LockTimeoutException ex) {
+            log.error("Wallet is locked for userId: {} - Error: {}", userId, ex.getMessage());
             throw new WalletLockedException("The wallet is temporarily locked due to another operation. Please try again later.");
+        } catch (Exception e) {
+            log.error("Unexpected error during deposit for userId: {} - Error: {}", userId, e.getMessage(), e);
+            throw e;
         }
     }
 

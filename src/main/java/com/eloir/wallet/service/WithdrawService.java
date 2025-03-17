@@ -3,11 +3,11 @@ package com.eloir.wallet.service;
 import com.eloir.wallet.entity.Wallet;
 import com.eloir.wallet.exception.WalletLockedException;
 import com.eloir.wallet.repository.WalletRepository;
-import com.eloir.wallet.validation.input.WithdrawValidationInput;
-import com.eloir.wallet.validation.WithdrawValidator;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.LockTimeoutException;
+import jakarta.persistence.PessimisticLockException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,11 +19,9 @@ import java.math.BigDecimal;
 public class WithdrawService implements OperationService {
 
     private final WalletRepository walletRepository;
-    private final WithdrawValidator withdrawValidator;
 
-    public WithdrawService(WalletRepository walletRepository, WithdrawValidator withdrawValidator) {
+    public WithdrawService(WalletRepository walletRepository) {
         this.walletRepository = walletRepository;
-        this.withdrawValidator = withdrawValidator;
     }
 
     @Override
@@ -31,10 +29,6 @@ public class WithdrawService implements OperationService {
     @Retry(name = "walletService", fallbackMethod = "retryFallback")
     @Transactional
     public void execute(String userId, BigDecimal amount) {
-
-        WithdrawValidationInput validationInput = new WithdrawValidationInput(userId, amount);
-        withdrawValidator.validate(validationInput);
-
         log.info("Withdraw operation started for userId: {} with amount: {}", userId, amount);
 
         try {
@@ -52,13 +46,14 @@ public class WithdrawService implements OperationService {
             log.info("Withdraw operation successful for userId: {} with amount: {}", userId, amount);
 
         } catch (EntityNotFoundException ex) {
-            log.error("Entity not found: {}", ex.getMessage());
-            throw new EntityNotFoundException(ex.getMessage());
-        } catch (IllegalArgumentException ex) {
+            log.error("Wallet not found: {}", ex.getMessage());
             throw ex;
-        } catch (Exception ex) {
-            log.error("Withdraw operation failed for userId: {} with amount: {}. Error: {}", userId, amount, ex.getMessage());
+        } catch (PessimisticLockException | LockTimeoutException ex) {
+            log.error("Wallet is locked for userId: {} - Error: {}", userId, ex.getMessage());
             throw new WalletLockedException("The wallet is temporarily locked due to another operation. Please try again later.");
+        } catch (Exception e) {
+            log.error("Unexpected error during deposit for userId: {} - Error: {}", userId, e.getMessage(), e);
+            throw e;
         }
     }
 

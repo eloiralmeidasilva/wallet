@@ -1,10 +1,8 @@
 package com.eloir.wallet.controller;
 
-import com.eloir.wallet.model.OperationRequest;
-import com.eloir.wallet.model.TransferRequest;
 import com.eloir.wallet.service.DepositService;
-import com.eloir.wallet.service.WithdrawService;
 import com.eloir.wallet.service.TransferService;
+import com.eloir.wallet.service.WithdrawService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,8 +16,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class OperationControllerTest {
@@ -56,10 +54,8 @@ class OperationControllerTest {
     @Test
     void deposit_ShouldReturnOk_WhenUserIsAuthenticated() {
         doNothing().when(depositService).execute(userId, BigDecimal.TEN);
-        OperationRequest operationRequest = new OperationRequest();
-        operationRequest.setAmount(BigDecimal.TEN);
 
-        ResponseEntity<String> response = operationController.deposit(operationRequest);
+        ResponseEntity<String> response = operationController.deposit(BigDecimal.TEN);
 
         assertEquals(200, response.getStatusCodeValue());
         assertEquals("Deposit successful.", response.getBody());
@@ -69,10 +65,8 @@ class OperationControllerTest {
     @Test
     void withdraw_ShouldReturnOk_WhenUserIsAuthenticated() {
         doNothing().when(withdrawService).execute(userId, BigDecimal.TEN);
-        OperationRequest operationRequest = new OperationRequest();
-        operationRequest.setAmount(BigDecimal.TEN);
 
-        ResponseEntity<String> response = operationController.withdraw(operationRequest);
+        ResponseEntity<String> response = operationController.withdraw(BigDecimal.TEN);
 
         assertEquals(200, response.getStatusCodeValue());
         assertEquals("Withdrawal successful.", response.getBody());
@@ -81,15 +75,13 @@ class OperationControllerTest {
 
     @Test
     void transfer_ShouldReturnOk_WhenUserIsAuthenticated() {
-        doNothing().when(transferService).executeTransfer(userId, "2025.00000001-01", BigDecimal.TEN); // Supondo que executeTransfer seja void
-        TransferRequest transferRequest = new TransferRequest();
-        transferRequest.setAmount(BigDecimal.TEN);
-        transferRequest.setCodAccount("2025.00000001-01");
+        doNothing().when(transferService).executeTransfer(userId, "2025.00000001-01", BigDecimal.TEN);
 
-        ResponseEntity<String> response = operationController.transfer(transferRequest);
+        ResponseEntity<String> response = operationController.transfer("2025.00000001-01", BigDecimal.TEN);
 
         assertEquals(200, response.getStatusCodeValue());
         assertEquals("Transfer successful.", response.getBody());
-        verify(transferService, times(1)).executeTransfer(userId, "2025.00000001-01", BigDecimal.TEN); // Verificando se o método foi chamado uma vez
+        verify(transferService, times(1))
+                .executeTransfer(userId, "2025.00000001-01", BigDecimal.TEN);
     }
 }

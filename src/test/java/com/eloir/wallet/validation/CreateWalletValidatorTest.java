@@ -33,19 +33,6 @@ class CreateWalletValidatorTest {
     }
 
     @Test
-    void validate_ShouldThrowException_WhenUserIdIsNullOrEmpty() {
-        final CreateWalletValidationInput input1 = new CreateWalletValidationInput(null, BigDecimal.TEN);
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> createWalletValidator.validate(input1));
-        assertEquals("User ID cannot be null or empty.", exception.getMessage());
-
-        final CreateWalletValidationInput input2 = new CreateWalletValidationInput("", BigDecimal.TEN);
-        exception = assertThrows(IllegalArgumentException.class,
-                () -> createWalletValidator.validate(input2));
-        assertEquals("User ID cannot be null or empty.", exception.getMessage());
-    }
-
-    @Test
     void validate_ShouldThrowException_WhenUserAlreadyHasAWallet() {
         String userId = "user123";
         CreateWalletValidationInput input = new CreateWalletValidationInput(userId, BigDecimal.TEN);

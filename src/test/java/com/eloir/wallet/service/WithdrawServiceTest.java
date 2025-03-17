@@ -3,20 +3,19 @@ package com.eloir.wallet.service;
 import com.eloir.wallet.entity.Wallet;
 import com.eloir.wallet.exception.WalletLockedException;
 import com.eloir.wallet.repository.WalletRepository;
-import com.eloir.wallet.validation.WithdrawValidator;
-import com.eloir.wallet.validation.input.WithdrawValidationInput;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PessimisticLockException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 class WithdrawServiceTest {
@@ -26,9 +25,6 @@ class WithdrawServiceTest {
 
     @Mock
     private WalletRepository walletRepository;
-
-    @Mock
-    private WithdrawValidator withdrawValidator;
 
     private Wallet wallet;
 
@@ -44,10 +40,6 @@ class WithdrawServiceTest {
     void execute_ShouldPerformWithdraw_WhenBalanceIsSufficient() {
         String userId = "user1";
         BigDecimal amount = BigDecimal.valueOf(50);
-        WithdrawValidationInput validationInput = new WithdrawValidationInput(userId, amount);
-
-        doNothing().when(withdrawValidator).validate(validationInput);
-
         when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
 
         withdrawService.execute(userId, amount);
@@ -59,10 +51,7 @@ class WithdrawServiceTest {
     @Test
     void execute_ShouldThrowIllegalArgumentException_WhenBalanceIsInsufficient() {
         String userId = "user1";
-        BigDecimal amount = BigDecimal.valueOf(200);  // Valor maior que o saldo disponível
-        WithdrawValidationInput validationInput = new WithdrawValidationInput(userId, amount);
-
-        doNothing().when(withdrawValidator).validate(validationInput);
+        BigDecimal amount = BigDecimal.valueOf(200);
 
         when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
 
@@ -76,10 +65,6 @@ class WithdrawServiceTest {
     void execute_ShouldThrowEntityNotFoundException_WhenWalletNotFound() {
         String userId = "user1";
         BigDecimal amount = BigDecimal.valueOf(50);
-        WithdrawValidationInput validationInput = new WithdrawValidationInput(userId, amount);
-
-        doNothing().when(withdrawValidator).validate(validationInput);
-
         when(walletRepository.findByUserId(userId)).thenReturn(Optional.empty());
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
@@ -92,11 +77,7 @@ class WithdrawServiceTest {
     void execute_ShouldThrowWalletLockedException_WhenAnUnexpectedErrorOccurs() {
         String userId = "user1";
         BigDecimal amount = BigDecimal.valueOf(50);
-        WithdrawValidationInput validationInput = new WithdrawValidationInput(userId, amount);
-
-        doNothing().when(withdrawValidator).validate(validationInput);
-
-        when(walletRepository.findByUserId(userId)).thenThrow(new RuntimeException("Database error"));
+        when(walletRepository.findByUserId(userId)).thenThrow(new PessimisticLockException("Database error"));
 
         WalletLockedException exception = assertThrows(WalletLockedException.class, () -> {
             withdrawService.execute(userId, amount);

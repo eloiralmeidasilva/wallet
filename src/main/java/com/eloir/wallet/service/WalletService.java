@@ -59,5 +59,5 @@ public class WalletService {
         return wallet.getBalance();
     }
 
-    // Implementação futura: histórico, depósito, saque e transferência
+    // Implementação futura: histórico
 }

@@ -38,7 +38,8 @@ resilience4j:
       walletService:
         maxAttempts: 3
         waitDuration: 2000
-        retryExceptions: java.lang.Exception
+        retryExceptions:
+          - com.eloir.wallet.exception.WalletLockedException
 
 #management:
 #  endpoint:

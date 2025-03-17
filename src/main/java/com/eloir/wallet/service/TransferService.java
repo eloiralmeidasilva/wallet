@@ -3,37 +3,31 @@ package com.eloir.wallet.service;
 import com.eloir.wallet.entity.Wallet;
 import com.eloir.wallet.exception.WalletLockedException;
 import com.eloir.wallet.repository.WalletRepository;
-import com.eloir.wallet.validation.input.TransferValidationInput;
-import com.eloir.wallet.validation.TransferValidator;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.LockTimeoutException;
+import jakarta.persistence.PessimisticLockException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import jakarta.persistence.EntityNotFoundException;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
 public class TransferService implements TransferOperationService {
 
     private final WalletRepository walletRepository;
-    private final TransferValidator transferValidator;
 
-    public TransferService(WalletRepository walletRepository, TransferValidator transferValidator) {
+    public TransferService(WalletRepository walletRepository) {
         this.walletRepository = walletRepository;
-        this.transferValidator = transferValidator;
     }
 
     @Transactional
     @CircuitBreaker(name = "walletService", fallbackMethod = "fallbackTransfer")
     @Retry(name = "walletService", fallbackMethod = "retryFallback")
     public void executeTransfer(String senderUserId, String receiverCodAccount, BigDecimal amount) {
-
-        TransferValidationInput validationInput = new TransferValidationInput(senderUserId, receiverCodAccount, amount);
-        transferValidator.validate(validationInput);
-
         log.info("Transfer operation started for senderUserId: {} to receiverCodAccount: {} with amount: {}", senderUserId, receiverCodAccount, amount);
 
         try {
@@ -57,13 +51,14 @@ public class TransferService implements TransferOperationService {
             log.info("Transfer operation successful for senderUserId: {} to receiverCodAccount: {} with amount: {}", senderUserId, receiverCodAccount, amount);
 
         } catch (EntityNotFoundException ex) {
-            log.error("Entity not found: {}", ex.getMessage());
-            throw new EntityNotFoundException(ex.getMessage());
-        } catch (IllegalArgumentException ex) {
+            log.error("Wallet not found: {}", ex.getMessage());
             throw ex;
-        } catch (Exception ex) {
-            log.error("Transfer operation failed for senderUserId: {} with amount: {}. Error: {}", senderUserId, amount, ex.getMessage());
+        } catch (PessimisticLockException | LockTimeoutException ex) {
+            log.error("Wallet is locked for userId: {} - Error: {}", senderUserId, ex.getMessage());
             throw new WalletLockedException("The wallet is temporarily locked due to another operation. Please try again later.");
+        } catch (Exception e) {
+            log.error("Unexpected error during deposit for userId: {} - Error: {}", senderUserId, e.getMessage(), e);
+            throw e;
         }
     }
 
