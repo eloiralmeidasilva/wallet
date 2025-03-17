@@ -94,7 +94,9 @@ The microservice was designed following best practices to ensure modularity, sec
 
 ## Next Steps
 
-1. **Health Check Configuration**: Adjust Actuator settings to expose only the `/health` and `/info` endpoints, ensuring better control over exposed information.
+1. **Improvement in Test Coverage**:
+    - Add integration tests to validate the complete transaction flow.
+    - Implement load tests to assess system performance under high request volume.
 
 2. **Separation of Transfer Implementations**:
    - Create a dedicated service for internal transfers within the system.
@@ -111,8 +113,3 @@ The microservice was designed following best practices to ensure modularity, sec
 5. **Creation of a Core Security Application**:
    - Develop a separate module containing all security-related classes.
    - Allow reuse of the security implementation across other company microservices.
-
-6. **Improvement in Test Coverage**:
-   - Add integration tests to validate the complete transaction flow.
-   - Implement load tests to assess system performance under high request volume.
-
