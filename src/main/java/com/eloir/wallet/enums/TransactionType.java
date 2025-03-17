@@ -1,4 +1,4 @@
-package com.eloir.wallet.entity;
+package com.eloir.wallet.enums;
 
 public enum TransactionType {
     DEPOSIT,

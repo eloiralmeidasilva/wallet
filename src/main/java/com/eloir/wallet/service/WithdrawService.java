@@ -1,7 +1,7 @@
 package com.eloir.wallet.service;
 
 import com.eloir.wallet.entity.Transaction;
-import com.eloir.wallet.entity.TransactionType;
+import com.eloir.wallet.enums.TransactionType;
 import com.eloir.wallet.entity.Wallet;
 import com.eloir.wallet.exception.WalletLockedException;
 import com.eloir.wallet.repository.TransactionRepository;

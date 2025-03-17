@@ -1,5 +1,6 @@
 package com.eloir.wallet.entity;
 
+import com.eloir.wallet.enums.TransactionType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

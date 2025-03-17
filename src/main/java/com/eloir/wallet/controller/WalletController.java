@@ -1,19 +1,17 @@
 package com.eloir.wallet.controller;
 
 import com.eloir.wallet.config.security.JwtTokenProvider;
-import com.eloir.wallet.entity.Wallet;
+import com.eloir.wallet.dto.StatementResponse;
 import com.eloir.wallet.service.WalletService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -34,23 +32,40 @@ public class WalletController {
             security = @SecurityRequirement(name = "BearerToken")
     )
     @PostMapping
-    public ResponseEntity<Wallet> createWallet() {
+    public ResponseEntity<?> createWallet() {
         String authenticatedUserId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Wallet wallet = walletService.createWallet(authenticatedUserId);
-        log.info("WalletController - createWallet - wallet created for authenticatedUserId: " + authenticatedUserId);
+        var wallet = walletService.createWallet(authenticatedUserId);
+        log.info("WalletController - createWallet - wallet created for userId: {}", authenticatedUserId);
         return ResponseEntity.ok(wallet);
     }
 
     @Operation(
             summary = "Get wallet balance",
-            description = "Retrieves the balance of a user's wallet, ensuring that the user is authenticated.",
+            description = "Retrieves the balance of a user's wallet, ensuring authentication.",
             security = @SecurityRequirement(name = "BearerToken")
     )
     @GetMapping("/balance")
-    public ResponseEntity<BigDecimal> getBalance() {
+    public ResponseEntity<?> getBalance() {
         String authenticatedUserId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        log.info("WalletController - getBalance - authenticatedUserId: " + authenticatedUserId);
-        BigDecimal balance = walletService.getBalance(authenticatedUserId);
+        log.info("WalletController - getBalance - userId: {}", authenticatedUserId);
+        var balance = walletService.getBalance(authenticatedUserId);
         return ResponseEntity.ok(balance);
+    }
+
+    @Operation(
+            summary = "Get wallet statement",
+            description = "Retrieves the transaction history for a user's wallet within a date range.",
+            security = @SecurityRequirement(name = "BearerToken")
+    )
+    @GetMapping("/statement")
+    public ResponseEntity<List<StatementResponse>> getStatement(
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate
+    ) {
+        String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        log.info("WalletController - getStatement - userId: {} | startDate: {} | endDate: {}", userId, startDate, endDate);
+
+        var statement = walletService.getStatement(userId, startDate, endDate);
+        return ResponseEntity.ok(statement);
     }
 }

@@ -1,6 +1,9 @@
 package com.eloir.wallet.service;
 
+import com.eloir.wallet.dto.StatementResponse;
+import com.eloir.wallet.entity.Transaction;
 import com.eloir.wallet.entity.Wallet;
+import com.eloir.wallet.repository.TransactionRepository;
 import com.eloir.wallet.repository.WalletRepository;
 import com.eloir.wallet.validation.CreateWalletValidator;
 import com.eloir.wallet.validation.input.CreateWalletValidationInput;
@@ -11,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -19,10 +23,13 @@ public class WalletService {
     public static final String ACCOUNT_TYPE = "01";
     private final WalletRepository walletRepository;
     private final CreateWalletValidator validator;
+    private final TransactionRepository transactionRepository;
 
-    public WalletService(WalletRepository walletRepository, CreateWalletValidator validator) {
+    public WalletService(WalletRepository walletRepository,
+                         CreateWalletValidator validator, TransactionRepository transactionRepository) {
         this.walletRepository = walletRepository;
         this.validator = validator;
+        this.transactionRepository = transactionRepository;
     }
 
     @Transactional
@@ -59,5 +66,21 @@ public class WalletService {
         return wallet.getBalance();
     }
 
-    // Implementação futura: histórico
+    @Transactional(readOnly = true)
+    public List<StatementResponse> getStatement(String userId, LocalDate startDate, LocalDate endDate) {
+        Wallet wallet = walletRepository.findByUserId(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Wallet not found for userId: " + userId));
+
+        List<Transaction> transactions = transactionRepository.findByWalletAndCreatedAtBetween(wallet, startDate.atStartOfDay(), endDate.plusDays(1).atStartOfDay());
+
+        return transactions.stream()
+                .map(tx -> new StatementResponse(
+                        tx.getId(),
+                        tx.getType(),
+                        tx.getAmount(),
+                        tx.getFinalBalance(),
+                        tx.getCreatedAt()
+                ))
+                .toList();
+    }
 }
