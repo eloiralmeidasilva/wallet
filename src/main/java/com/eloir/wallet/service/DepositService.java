@@ -1,7 +1,10 @@
 package com.eloir.wallet.service;
 
+import com.eloir.wallet.entity.Transaction;
+import com.eloir.wallet.entity.TransactionType;
 import com.eloir.wallet.entity.Wallet;
 import com.eloir.wallet.exception.WalletLockedException;
+import com.eloir.wallet.repository.TransactionRepository;
 import com.eloir.wallet.repository.WalletRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -19,9 +22,11 @@ import java.math.BigDecimal;
 public class DepositService implements OperationService {
 
     private final WalletRepository walletRepository;
+    private final TransactionRepository transactionRepository;
 
-    public DepositService(WalletRepository walletRepository) {
+    public DepositService(WalletRepository walletRepository, TransactionRepository transactionRepository) {
         this.walletRepository = walletRepository;
+        this.transactionRepository = transactionRepository;
     }
 
     @Override
@@ -35,7 +40,11 @@ public class DepositService implements OperationService {
             Wallet wallet = walletRepository.findByUserId(userId)
                     .orElseThrow(() -> new EntityNotFoundException("Wallet not found"));
 
-            wallet.setBalance(amount.add(wallet.getBalance()));
+            BigDecimal newBalance = wallet.getBalance().add(amount);
+            wallet.setBalance(newBalance);
+
+            Transaction transaction = new Transaction(wallet, TransactionType.DEPOSIT, amount, newBalance);
+            transactionRepository.save(transaction);
 
             walletRepository.save(wallet);
 
@@ -54,11 +63,13 @@ public class DepositService implements OperationService {
 
     public void fallbackDeposit(String userId, BigDecimal amount, Throwable t) {
         log.error("Fallback method invoked due to error: {}", t.getMessage());
+        log.error("userId {} and amount: {} ", userId, amount);
         throw new RuntimeException("Deposit service is temporarily unavailable. Please try again later.");
     }
 
     public void retryFallback(String userId, BigDecimal amount, Throwable t) {
         log.error("Retry fallback method invoked due to error: {}", t.getMessage());
+        log.error("userId {} and amount: {} ", userId, amount);
         throw new RuntimeException("The deposit operation failed after multiple retries. Please try again later.");
     }
 }

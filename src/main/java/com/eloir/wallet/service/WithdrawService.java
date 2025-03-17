@@ -1,7 +1,10 @@
 package com.eloir.wallet.service;
 
+import com.eloir.wallet.entity.Transaction;
+import com.eloir.wallet.entity.TransactionType;
 import com.eloir.wallet.entity.Wallet;
 import com.eloir.wallet.exception.WalletLockedException;
+import com.eloir.wallet.repository.TransactionRepository;
 import com.eloir.wallet.repository.WalletRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -19,9 +22,11 @@ import java.math.BigDecimal;
 public class WithdrawService implements OperationService {
 
     private final WalletRepository walletRepository;
+    private final TransactionRepository transactionRepository;
 
-    public WithdrawService(WalletRepository walletRepository) {
+    public WithdrawService(WalletRepository walletRepository, TransactionRepository transactionRepository) {
         this.walletRepository = walletRepository;
+        this.transactionRepository = transactionRepository;
     }
 
     @Override
@@ -39,7 +44,11 @@ public class WithdrawService implements OperationService {
                 throw new IllegalArgumentException("Insufficient balance.");
             }
 
-            wallet.setBalance(wallet.getBalance().subtract(amount));
+            BigDecimal newBalance = wallet.getBalance().subtract(amount);
+            wallet.setBalance(newBalance);
+
+            Transaction transaction = new Transaction(wallet, TransactionType.WITHDRAW, amount, newBalance);
+            transactionRepository.save(transaction);
 
             walletRepository.save(wallet);
 
@@ -52,18 +61,20 @@ public class WithdrawService implements OperationService {
             log.error("Wallet is locked for userId: {} - Error: {}", userId, ex.getMessage());
             throw new WalletLockedException("The wallet is temporarily locked due to another operation. Please try again later.");
         } catch (Exception e) {
-            log.error("Unexpected error during deposit for userId: {} - Error: {}", userId, e.getMessage(), e);
+            log.error("Unexpected error during withdraw for userId: {} - Error: {}", userId, e.getMessage(), e);
             throw e;
         }
     }
 
-    public void fallbackWithdraw(Throwable t) {
+    public void fallbackWithdraw(String userId, BigDecimal amount, Throwable t) {
         log.error("Fallback method invoked due to error: {}", t.getMessage());
-        throw new WalletLockedException("Withdraw service is temporarily unavailable. Please try again later.");
+        log.error("userId {} and amount: {} ", userId, amount);
+        throw new RuntimeException("Withdraw service is temporarily unavailable. Please try again later.");
     }
 
-    public void retryFallback(Throwable t) {
+    public void retryFallback(String userId, BigDecimal amount, Throwable t) {
         log.error("Retry fallback method invoked due to error: {}", t.getMessage());
-        throw new WalletLockedException("The withdraw operation failed after multiple retries. Please try again later.");
+        log.error("userId {} and amount: {} ", userId, amount);
+        throw new RuntimeException("The withdraw operation failed after multiple retries. Please try again later.");
     }
 }

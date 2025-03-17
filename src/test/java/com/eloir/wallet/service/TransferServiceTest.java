@@ -1,6 +1,7 @@
 package com.eloir.wallet.service;
 
 import com.eloir.wallet.entity.Wallet;
+import com.eloir.wallet.repository.TransactionRepository;
 import com.eloir.wallet.repository.WalletRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,11 +18,13 @@ class TransferServiceTest {
 
     private TransferService transferService;
     private WalletRepository walletRepository;
+    private TransactionRepository transactionRepository;
 
     @BeforeEach
     void setUp() {
         walletRepository = mock(WalletRepository.class);
-        transferService = new TransferService(walletRepository);
+        transactionRepository = mock(TransactionRepository.class);
+        transferService = new TransferService(walletRepository, transactionRepository);
     }
 
     @Test
