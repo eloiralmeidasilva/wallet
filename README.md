@@ -45,7 +45,8 @@ This repository contains the implementation of the Wallet microservice, responsi
    The API will be available at [http://localhost:8080](http://localhost:8080).
 
    - Swagger UI: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
-   - Metrics and Health (Actuator): [http://localhost:8080/actuator](http://localhost:8080/actuator)
+   - Metrics and Health (Actuator): [http://localhost:8080/actuator](http://localhost:8080/actuator) , [http://localhost:8080/actuator/info](http://localhost:8080/actuator/info) , [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health)
+
 
 ## Authentication
 
