@@ -37,21 +37,14 @@ public class Transaction {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_wallet_id")
-    private Wallet senderWallet;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "receiver_wallet_id")
     private Wallet receiverWallet;
 
     @Column
-    private String senderUserId;
+    private String ownerUserId;
 
     @Column
     private String receiverUserId;
-
-    @Column
-    private BigDecimal finalBalanceSender;
 
     @Column
     private BigDecimal finalBalanceReceiver;
@@ -60,18 +53,19 @@ public class Transaction {
         this.wallet = wallet;
         this.type = type;
         this.amount = amount;
+        this.ownerUserId = wallet.getUserId();
         this.finalBalance = finalBalance;
         this.createdAt = LocalDateTime.now();
     }
 
     public Transaction(Wallet senderWallet, Wallet receiverWallet, String senderUserId, String receiverUserId, BigDecimal amount, BigDecimal finalBalanceSender, BigDecimal finalBalanceReceiver) {
         this.type = TransactionType.TRANSFER;
-        this.senderWallet = senderWallet;
+        this.wallet = senderWallet;
         this.receiverWallet = receiverWallet;
-        this.senderUserId = senderUserId;
+        this.ownerUserId = senderUserId;
         this.receiverUserId = receiverUserId;
         this.amount = amount;
-        this.finalBalanceSender = finalBalanceSender;
+        this.finalBalance = finalBalanceSender;
         this.finalBalanceReceiver = finalBalanceReceiver;
         this.createdAt = LocalDateTime.now();
     }

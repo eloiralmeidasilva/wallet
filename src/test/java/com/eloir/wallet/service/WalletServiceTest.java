@@ -1,5 +1,6 @@
 package com.eloir.wallet.service;
 
+import com.eloir.wallet.dto.WalletResponse;
 import com.eloir.wallet.entity.Wallet;
 import com.eloir.wallet.repository.WalletRepository;
 import com.eloir.wallet.validation.CreateWalletValidator;
@@ -52,12 +53,13 @@ class WalletServiceTest {
         String userId = "user123";
         Wallet wallet = new Wallet();
         wallet.setBalance(BigDecimal.valueOf(100));
+        wallet.setCodAccount("2025.00000001-01");
 
         when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
 
-        BigDecimal balance = walletService.getBalance(userId);
+        WalletResponse walletResponse = walletService.getBalance(userId);
 
-        assertEquals(BigDecimal.valueOf(100), balance);
+        assertEquals(BigDecimal.valueOf(100), walletResponse.amount());
     }
 
     @Test

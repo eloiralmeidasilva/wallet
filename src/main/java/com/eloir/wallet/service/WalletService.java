@@ -1,6 +1,7 @@
 package com.eloir.wallet.service;
 
 import com.eloir.wallet.dto.StatementResponse;
+import com.eloir.wallet.dto.WalletResponse;
 import com.eloir.wallet.entity.Transaction;
 import com.eloir.wallet.entity.Wallet;
 import com.eloir.wallet.repository.TransactionRepository;
@@ -60,10 +61,10 @@ public class WalletService {
     }
 
     @Transactional
-    public BigDecimal getBalance(String userId) {
+    public WalletResponse getBalance(String userId) {
         Wallet wallet = walletRepository.findByUserId(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Wallet not found"));
-        return wallet.getBalance();
+        return new WalletResponse(wallet.getCodAccount(), wallet.getBalance());
     }
 
     @Transactional(readOnly = true)

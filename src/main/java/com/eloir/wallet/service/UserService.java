@@ -15,6 +15,14 @@ public class UserService {
             user.setRole("USER");
             return user;
         }
+        else if ("user2".equals(username) && "password2".equals(password)) {
+            User user = new User();
+            user.setUserId("2");
+            user.setUserName("user2");
+            user.setEmail("user2.wallet@gmail.com");
+            user.setRole("USER");
+            return user;
+        }
         return null;
     }
 }

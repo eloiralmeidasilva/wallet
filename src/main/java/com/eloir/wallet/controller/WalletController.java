@@ -2,6 +2,7 @@ package com.eloir.wallet.controller;
 
 import com.eloir.wallet.config.security.JwtTokenProvider;
 import com.eloir.wallet.dto.StatementResponse;
+import com.eloir.wallet.dto.WalletResponse;
 import com.eloir.wallet.service.WalletService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -48,8 +49,8 @@ public class WalletController {
     public ResponseEntity<?> getBalance() {
         String authenticatedUserId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         log.info("WalletController - getBalance - userId: {}", authenticatedUserId);
-        var balance = walletService.getBalance(authenticatedUserId);
-        return ResponseEntity.ok(balance);
+        WalletResponse wallet = walletService.getBalance(authenticatedUserId);
+        return ResponseEntity.ok(wallet);
     }
 
     @Operation(

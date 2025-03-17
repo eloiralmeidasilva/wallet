@@ -1,6 +1,7 @@
 package com.eloir.wallet.controller;
 
 import com.eloir.wallet.config.security.JwtTokenProvider;
+import com.eloir.wallet.dto.WalletResponse;
 import com.eloir.wallet.entity.Wallet;
 import com.eloir.wallet.model.User;
 import com.eloir.wallet.service.WalletService;
@@ -68,12 +69,12 @@ class WalletControllerTest {
 
     @Test
     void getBalance_ShouldReturnBalance_WhenUserIsAuthenticated() {
-        BigDecimal balance = BigDecimal.valueOf(1000);
-        when(walletService.getBalance("user123")).thenReturn(balance);
+        WalletResponse walletResponse = new WalletResponse("2025.00000001-01", BigDecimal.valueOf(1000));
+        when(walletService.getBalance("user123")).thenReturn(walletResponse);
 
         ResponseEntity<?> response = walletController.getBalance();
 
         assertEquals(200, response.getStatusCodeValue());
-        assertEquals(balance, response.getBody());
+        assertEquals(walletResponse, response.getBody());
     }
 }
