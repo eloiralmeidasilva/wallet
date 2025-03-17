@@ -62,14 +62,14 @@ This application uses mocked users, and only two exist:
 Authentication must be performed using the credentials above.
 
 ### Example authentication via cURL:
-```bash
+``bash
 curl -X POST http://localhost:8080/authenticate -d '{"username":"user", "password":"password"}' -H "Content-Type: application/json"
 
 ## Testing
 
 To run automated tests, use the command:
 
-```bash
+``bash
 mvn test
 
 ## Design and Architectural Decisions
