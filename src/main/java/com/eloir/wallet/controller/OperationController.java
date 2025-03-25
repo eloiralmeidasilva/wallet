@@ -1,8 +1,8 @@
 package com.eloir.wallet.controller;
 
-import com.eloir.wallet.service.DepositService;
-import com.eloir.wallet.service.TransferService;
-import com.eloir.wallet.service.WithdrawService;
+import com.eloir.wallet.dto.WalletOperationRequest;
+import com.eloir.wallet.enums.TransactionType;
+import com.eloir.wallet.service.WalletOperationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -20,71 +20,64 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 
-
 @Validated
 @Slf4j
 @RestController
 @RequestMapping("/api/operations")
 public class OperationController {
 
-    private final DepositService depositService;
-    private final WithdrawService withdrawService;
-    private final TransferService transferService;
+    private final WalletOperationService walletOperationService;
 
-    public OperationController(DepositService depositService, WithdrawService withdrawService, TransferService transferService) {
-        this.depositService = depositService;
-        this.withdrawService = withdrawService;
-        this.transferService = transferService;
+    public OperationController(WalletOperationService walletOperationService) {
+        this.walletOperationService = walletOperationService;
     }
 
-    @Operation(
-            summary = "Make a deposit into the wallet",
-            description = "Allows the user to make a deposit as long as the user ID in the request is valid.",
-            security = @SecurityRequirement(name = "BearerToken")
-    )
-    @PostMapping(value = "/deposit")
+    @Operation(summary = "Make a deposit", security = @SecurityRequirement(name = "BearerToken"))
+    @PostMapping("/deposit")
     public ResponseEntity<String> deposit(
             @Parameter(description = "Amount to be deposited")
             @Valid @Min(value = 0, message = "Min value is Zero")
-            @NotNull @RequestParam BigDecimal amount
-    ) {
+            @NotNull @RequestParam BigDecimal amount) {
+
         String authenticatedUserId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        log.info("Amount : {} userId: {}", amount, authenticatedUserId);
-        depositService.execute(authenticatedUserId, amount);
+        log.info("Deposit requested: userId={} amount={}", authenticatedUserId, amount);
+
+        WalletOperationRequest request = new WalletOperationRequest(authenticatedUserId, amount, TransactionType.DEPOSIT, null);
+        walletOperationService.execute(request);
         return ResponseEntity.ok("Deposit successful.");
     }
 
-    @Operation(
-            summary = "Make a withdrawal from the wallet",
-            description = "Allows the user to make a withdrawal as long as the user ID in the request is valid.",
-            security = @SecurityRequirement(name = "BearerToken")
-    )
-    @PostMapping(value = "/withdraw")
+    @Operation(summary = "Make a withdrawal", security = @SecurityRequirement(name = "BearerToken"))
+    @PostMapping("/withdraw")
     public ResponseEntity<String> withdraw(
-            @Parameter(description = "Amount to be withdraw")
-            @NotNull @Valid @Min(value = 0, message = "Min value is Zero")
-            @RequestParam BigDecimal amount
-    ) {
+            @Parameter(description = "Amount to withdraw")
+            @Valid @Min(value = 0, message = "Min value is Zero")
+            @NotNull @RequestParam BigDecimal amount) {
+
         String authenticatedUserId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        log.info("Amount : {} userId: {}", amount, authenticatedUserId);
-        withdrawService.execute(authenticatedUserId, amount);
+        log.info("Withdraw requested: userId={} amount={}", authenticatedUserId, amount);
+
+        WalletOperationRequest request = new WalletOperationRequest(authenticatedUserId, amount, TransactionType.WITHDRAW, null);
+        walletOperationService.execute(request);
+
         return ResponseEntity.ok("Withdrawal successful.");
     }
 
-    @Operation(
-            summary = "Make a transfer between wallets",
-            description = "Allows the user to make a transfer between wallets as long as the user ID and destination account code are valid.",
-            security = @SecurityRequirement(name = "BearerToken")
-    )
-    @PostMapping(value = "/transfer")
+    @Operation(summary = "Make a transfer", security = @SecurityRequirement(name = "BearerToken"))
+    @PostMapping("/transfer")
     public ResponseEntity<String> transfer(
-            @Parameter(description = "Destination account code") @NotNull @RequestParam String codAccount,
-            @Parameter(description = "Amount to be transferred")
-            @NotNull @Min(value = 0, message = "Min value is Zero") @RequestParam BigDecimal amount
-    ) {
+            @Parameter(description = "Destination account code")
+            @NotNull @RequestParam String codAccount,
+            @Parameter(description = "Amount to transfer")
+            @Valid @Min(value = 0, message = "Min value is Zero")
+            @NotNull @RequestParam BigDecimal amount) {
+
         String authenticatedUserId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        log.info("transfer - Amount : {} userId: {} receiverCodAccount: {}", amount, authenticatedUserId, codAccount);
-        transferService.executeTransfer(authenticatedUserId, codAccount, amount);
+        log.info("Transfer requested: senderUserId={} receiverCodAccount={} amount={}", authenticatedUserId, codAccount, amount);
+
+        WalletOperationRequest request = new WalletOperationRequest(authenticatedUserId, amount, TransactionType.TRANSFER, codAccount);
+        walletOperationService.execute(request);
+
         return ResponseEntity.ok("Transfer successful.");
     }
 }
